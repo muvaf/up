@@ -16,6 +16,8 @@ package controlplane
 
 import (
 	"context"
+	"github.com/crossplane/crossplane-runtime/pkg/errors"
+	"github.com/upbound/up-sdk-go/service/accounts"
 
 	"github.com/alecthomas/kong"
 	"github.com/posener/complete"
@@ -29,6 +31,10 @@ import (
 	"github.com/upbound/up/internal/upbound"
 )
 
+const (
+	errUserAccountFmt = "%s is a user account but control plane operations are supported only for organization accounts. use the --account flag to specify an organization account."
+)
+
 // BeforeReset is the first hook to run.
 func (c *Cmd) BeforeReset(p *kong.Path, maturity feature.Maturity) error {
 	return feature.HideMaturity(p, maturity)
@@ -40,6 +46,10 @@ func (c *Cmd) AfterApply(kongCtx *kong.Context) error {
 	upCtx, err := upbound.NewFromFlags(c.Flags)
 	if err != nil {
 		return err
+	}
+	// There is no way for users to own any control planes.
+	if upCtx.Account.Type == accounts.AccountUser {
+		return errors.Errorf(errUserAccountFmt, upCtx.Account.Name)
 	}
 	cfg, err := upCtx.BuildSDKConfig()
 	if err != nil {
@@ -67,7 +77,7 @@ func PredictControlPlanes() complete.Predictor {
 			return nil
 		}
 
-		ctps, err := cp.List(context.Background(), upCtx.Account)
+		ctps, err := cp.List(context.Background(), upCtx.Account.Name)
 		if err != nil {
 			return nil
 		}

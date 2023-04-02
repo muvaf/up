@@ -42,7 +42,7 @@ type getCmd struct {
 
 // Run executes the get command.
 func (c *getCmd) Run(printer upterm.ObjectPrinter, cc *cp.Client, upCtx *upbound.Context) error {
-	ctp, err := cc.Get(context.Background(), upCtx.Account, c.Name)
+	ctp, err := cc.Get(context.Background(), upCtx.Account.Name, c.Name)
 	if err != nil {
 		return err
 	}

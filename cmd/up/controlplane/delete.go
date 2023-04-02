@@ -30,7 +30,7 @@ type deleteCmd struct {
 
 // Run executes the delete command.
 func (c *deleteCmd) Run(p pterm.TextPrinter, cc *cp.Client, upCtx *upbound.Context) error {
-	if err := cc.Delete(context.Background(), upCtx.Account, c.Name); err != nil {
+	if err := cc.Delete(context.Background(), upCtx.Account.Name, c.Name); err != nil {
 		return err
 	}
 	p.Printfln("%s deleted", c.Name)

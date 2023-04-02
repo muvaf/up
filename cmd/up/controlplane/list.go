@@ -51,12 +51,12 @@ func (c *listCmd) Run(printer upterm.ObjectPrinter, p pterm.TextPrinter, cc *cp.
 	// TODO(hasheddan): we currently just max out single page size, but we
 	// may opt to support limiting page size and iterating through pages via
 	// flags in the future.
-	cpList, err := cc.List(context.Background(), upCtx.Account, common.WithSize(maxItems))
+	cpList, err := cc.List(context.Background(), upCtx.Account.Name, common.WithSize(maxItems))
 	if err != nil {
 		return err
 	}
 	if len(cpList.ControlPlanes) == 0 {
-		p.Printfln("No control planes found in %s", upCtx.Account)
+		p.Printfln("No control planes found in %s", upCtx.Account.Name)
 		return nil
 	}
 	return printer.Print(cpList.ControlPlanes, fieldNames, extractFields)

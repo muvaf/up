@@ -120,7 +120,7 @@ func (c *connectCmd) Run(p pterm.TextPrinter, upCtx *upbound.Context) error {
 		return errors.Wrap(err, errParseInstallParameters)
 	}
 	params["mcp"] = map[string]string{
-		"account":   upCtx.Account,
+		"account":   upCtx.Account.Name,
 		"name":      c.Name,
 		"namespace": c.Namespace,
 		"host":      fmt.Sprintf("%s://%s", upCtx.ProxyEndpoint.Scheme, upCtx.ProxyEndpoint.Host),

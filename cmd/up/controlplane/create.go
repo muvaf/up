@@ -36,12 +36,12 @@ type createCmd struct {
 // Run executes the create command.
 func (c *createCmd) Run(p pterm.TextPrinter, cc *cp.Client, cfc *configurations.Client, upCtx *upbound.Context) error {
 	// Get the UUID from the Configuration name, if it exists.
-	cfg, err := cfc.Get(context.Background(), upCtx.Account, c.ConfigurationName)
+	cfg, err := cfc.Get(context.Background(), upCtx.Account.Name, c.ConfigurationName)
 	if err != nil {
 		return err
 	}
 
-	if _, err := cc.Create(context.Background(), upCtx.Account, &cp.ControlPlaneCreateParameters{
+	if _, err := cc.Create(context.Background(), upCtx.Account.Name, &cp.ControlPlaneCreateParameters{
 		Name:            c.Name,
 		Description:     c.Description,
 		ConfigurationID: cfg.ID,

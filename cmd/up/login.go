@@ -156,7 +156,7 @@ func (c *loginCmd) Run(p pterm.TextPrinter, upCtx *upbound.Context) error { // n
 	upCtx.Profile.Session = session
 
 	// If the default account is not set, the user's personal account is used.
-	if upCtx.Account == "" {
+	if upCtx.Account.Name == "" {
 		conf, err := upCtx.BuildSDKConfig()
 		if err != nil {
 			return errors.Wrap(err, errLoginFailed)
@@ -165,7 +165,7 @@ func (c *loginCmd) Run(p pterm.TextPrinter, upCtx *upbound.Context) error { // n
 		if err != nil {
 			return errors.Wrap(err, errLoginFailed)
 		}
-		upCtx.Account = info.User.Username
+		upCtx.Account.Name = info.User.Username
 	}
 
 	// If profile name was not provided and no default exists, set name to 'default'.
@@ -175,7 +175,7 @@ func (c *loginCmd) Run(p pterm.TextPrinter, upCtx *upbound.Context) error { // n
 
 	upCtx.Profile.ID = auth.ID
 	upCtx.Profile.Type = profType
-	upCtx.Profile.Account = upCtx.Account
+	upCtx.Profile.Account = upCtx.Account.Name
 
 	if err := upCtx.Cfg.AddOrUpdateUpboundProfile(upCtx.ProfileName, upCtx.Profile); err != nil {
 		return errors.Wrap(err, errLoginFailed)

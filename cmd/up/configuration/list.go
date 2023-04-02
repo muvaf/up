@@ -31,7 +31,7 @@ type listCmd struct{}
 
 // Run executes the list command.
 func (c *listCmd) Run(printer upterm.ObjectPrinter, p pterm.TextPrinter, cc *configurations.Client, upCtx *upbound.Context) error {
-	cfgList, err := cc.List(context.Background(), upCtx.Account)
+	cfgList, err := cc.List(context.Background(), upCtx.Account.Name)
 	if err != nil {
 		return err
 	}

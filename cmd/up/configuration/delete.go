@@ -41,11 +41,11 @@ func (c *deleteCmd) AfterApply(cc *configurations.Client, cpc *controlplanes.Cli
 	// Deleting a configuration can orphan any control planes that have it deployed.
 	// While the API will eventually return a 400 status, we can show the user
 	// which control planes are using the configuration.
-	cfg, err := cc.Get(context.Background(), upCtx.Account, c.Name)
+	cfg, err := cc.Get(context.Background(), upCtx.Account.Name, c.Name)
 	if err != nil {
 		return err
 	}
-	cpList, err := cpc.List(context.Background(), upCtx.Account, common.ListOption(controlplanes.WithConfiguration(cfg.ID)))
+	cpList, err := cpc.List(context.Background(), upCtx.Account.Name, common.ListOption(controlplanes.WithConfiguration(cfg.ID)))
 	if err != nil {
 		return err
 	}
@@ -81,7 +81,7 @@ type deleteCmd struct {
 
 // Run executes the delete command.
 func (c *deleteCmd) Run(p pterm.TextPrinter, cc *configurations.Client, upCtx *upbound.Context) error {
-	if err := cc.Delete(context.Background(), upCtx.Account, c.Name); err != nil {
+	if err := cc.Delete(context.Background(), upCtx.Account.Name, c.Name); err != nil {
 		return err
 	}
 	p.Printfln("%s deleted", c.Name)

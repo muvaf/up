@@ -48,12 +48,12 @@ var fieldNames = []string{"NAME", "TYPE", "PUBLIC", "UPDATED"}
 
 // Run executes the list command.
 func (c *listCmd) Run(printer upterm.ObjectPrinter, p pterm.TextPrinter, rc *repositories.Client, upCtx *upbound.Context) error {
-	rList, err := rc.List(context.Background(), upCtx.Account, common.WithSize(maxItems))
+	rList, err := rc.List(context.Background(), upCtx.Account.Name, common.WithSize(maxItems))
 	if err != nil {
 		return err
 	}
 	if len(rList.Repositories) == 0 {
-		p.Printfln("No repositories found in %s", upCtx.Account)
+		p.Printfln("No repositories found in %s", upCtx.Account.Name)
 		return nil
 	}
 	return printer.Print(rList.Repositories, fieldNames, extractFields)

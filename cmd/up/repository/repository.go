@@ -58,7 +58,7 @@ func PredictRepos() complete.Predictor {
 			return nil
 		}
 
-		repos, err := rc.List(context.Background(), upCtx.Account, common.WithSize(maxItems))
+		repos, err := rc.List(context.Background(), upCtx.Account.Name, common.WithSize(maxItems))
 		if err != nil {
 			return nil
 		}

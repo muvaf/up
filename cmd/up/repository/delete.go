@@ -43,7 +43,7 @@ func (c *deleteCmd) AfterApply(p pterm.TextPrinter, upCtx *upbound.Context) erro
 	}
 
 	if input.InputYes(confirm) {
-		p.Printfln("Deleting repository %s/%s. This cannot be undone.", upCtx.Account, c.Name)
+		p.Printfln("Deleting repository %s/%s. This cannot be undone.", upCtx.Account.Name, c.Name)
 		return nil
 	}
 
@@ -62,9 +62,9 @@ type deleteCmd struct {
 
 // Run executes the delete command.
 func (c *deleteCmd) Run(p pterm.TextPrinter, rc *repositories.Client, upCtx *upbound.Context) error {
-	if err := rc.Delete(context.Background(), upCtx.Account, c.Name); err != nil {
+	if err := rc.Delete(context.Background(), upCtx.Account.Name, c.Name); err != nil {
 		return err
 	}
-	p.Printfln("%s/%s deleted", upCtx.Account, c.Name)
+	p.Printfln("%s/%s deleted", upCtx.Account.Name, c.Name)
 	return nil
 }

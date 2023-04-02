@@ -61,7 +61,7 @@ func PredictConfigurations() complete.Predictor {
 			return nil
 		}
 
-		configs, err := cp.List(context.Background(), upCtx.Account)
+		configs, err := cp.List(context.Background(), upCtx.Account.Name)
 		if err != nil {
 			return nil
 		}

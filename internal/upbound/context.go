@@ -16,8 +16,10 @@ package upbound
 
 import (
 	"bytes"
+	"context"
 	"crypto/tls"
 	"encoding/json"
+	"github.com/upbound/up-sdk-go/service/accounts"
 	"net/http"
 	"net/http/cookiejar"
 	"net/url"
@@ -75,7 +77,7 @@ type Context struct {
 	ProfileName string
 	Profile     config.Profile
 	Token       string
-	Account     string
+	Account     Account
 	Domain      *url.URL
 
 	InsecureSkipTLSVerify bool
@@ -89,6 +91,12 @@ type Context struct {
 	allowMissingProfile bool
 	cfgPath             string
 	fs                  afero.Fs
+}
+
+type Account struct {
+	ID   uint          `json:"id"`
+	Name string        `json:"name"`
+	Type accounts.Type `json:"type"`
 }
 
 // Option modifies a Context
@@ -177,16 +185,32 @@ func NewFromFlags(f Flags, opts ...Option) (*Context, error) { //nolint:gocyclo
 		c.RegistryEndpoint = &u
 	}
 
-	c.Account = of.Account
 	c.Domain = of.Domain
-
-	// If account has not already been set, use the profile default.
-	if c.Account == "" {
-		c.Account = c.Profile.Account
+	c.InsecureSkipTLSVerify = of.InsecureSkipTLSVerify
+	cfg, err := c.BuildSDKConfig()
+	if err != nil {
+		return nil, errors.Wrap(err, "cannot build SDK config")
 	}
 
-	c.InsecureSkipTLSVerify = of.InsecureSkipTLSVerify
-
+	accountName := of.Account
+	// If account has not already been set, use the profile default.
+	if accountName == "" {
+		accountName = c.Profile.Account
+	}
+	a, err := accounts.NewClient(cfg).Get(context.Background(), accountName)
+	if err != nil {
+		return nil, errors.Wrapf(err, "cannot get account %s", accountName)
+	}
+	c.Account = Account{
+		Name: a.Account.Name,
+		Type: a.Account.Type,
+	}
+	switch a.Account.Type {
+	case accounts.AccountOrganization:
+		c.Account.ID = a.Organization.ID
+	case accounts.AccountUser:
+		c.Account.ID = a.User.ID
+	}
 	return c, nil
 }
 

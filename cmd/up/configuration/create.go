@@ -146,7 +146,7 @@ func (c *createCmd) handleCreate(cc *configurations.Client, upCtx *upbound.Conte
 		Repo:       c.Repo,
 		Private:    c.Private,
 	}
-	_, err := cc.Create(context.Background(), upCtx.Account, &params)
+	_, err := cc.Create(context.Background(), upCtx.Account.Name, &params)
 	return err
 }
 

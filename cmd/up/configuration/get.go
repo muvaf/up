@@ -31,7 +31,7 @@ type getCmd struct {
 
 // Run executes the get command.
 func (c *getCmd) Run(printer upterm.ObjectPrinter, p pterm.TextPrinter, cc *configurations.Client, upCtx *upbound.Context) error {
-	cfg, err := cc.Get(context.Background(), upCtx.Account, c.Name)
+	cfg, err := cc.Get(context.Background(), upCtx.Account.Name, c.Name)
 	if err != nil {
 		return err
 	}

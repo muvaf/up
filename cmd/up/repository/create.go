@@ -31,9 +31,9 @@ type createCmd struct {
 
 // Run executes the create command.
 func (c *createCmd) Run(p pterm.TextPrinter, rc *repositories.Client, upCtx *upbound.Context) error {
-	if err := rc.CreateOrUpdate(context.Background(), upCtx.Account, c.Name); err != nil {
+	if err := rc.CreateOrUpdate(context.Background(), upCtx.Account.Name, c.Name); err != nil {
 		return err
 	}
-	p.Printfln("%s/%s created", upCtx.Account, c.Name)
+	p.Printfln("%s/%s created", upCtx.Account.Name, c.Name)
 	return nil
 }

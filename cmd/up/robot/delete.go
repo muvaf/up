@@ -22,7 +22,6 @@ import (
 	"github.com/google/uuid"
 	"github.com/pterm/pterm"
 
-	"github.com/upbound/up-sdk-go/service/accounts"
 	"github.com/upbound/up-sdk-go/service/organizations"
 	"github.com/upbound/up-sdk-go/service/robots"
 
@@ -53,7 +52,7 @@ func (c *deleteCmd) AfterApply(p pterm.TextPrinter, upCtx *upbound.Context) erro
 	}
 
 	if input.InputYes(confirm) {
-		p.Printfln("Deleting robot %s/%s. This cannot be undone.", upCtx.Account, c.Name)
+		p.Printfln("Deleting robot %s/%s. This cannot be undone.", upCtx.Account.Name, c.Name)
 		return nil
 	}
 
@@ -70,20 +69,13 @@ type deleteCmd struct {
 }
 
 // Run executes the delete command.
-func (c *deleteCmd) Run(p pterm.TextPrinter, ac *accounts.Client, oc *organizations.Client, rc *robots.Client, upCtx *upbound.Context) error { //nolint:gocyclo
-	a, err := ac.Get(context.Background(), upCtx.Account)
-	if err != nil {
-		return err
-	}
-	if a.Account.Type != accounts.AccountOrganization {
-		return errors.New(errUserAccount)
-	}
-	rs, err := oc.ListRobots(context.Background(), a.Organization.ID)
+func (c *deleteCmd) Run(p pterm.TextPrinter, oc *organizations.Client, rc *robots.Client, upCtx *upbound.Context) error { //nolint:gocyclo
+	rs, err := oc.ListRobots(context.Background(), upCtx.Account.ID)
 	if err != nil {
 		return err
 	}
 	if len(rs) == 0 {
-		return errors.Errorf(errFindRobotFmt, c.Name, upCtx.Account)
+		return errors.Errorf(errFindRobotFmt, c.Name, upCtx.Account.Name)
 	}
 	// TODO(hasheddan): because this API does not guarantee name uniqueness, we
 	// must guarantee that exactly one robot exists in the specified account
@@ -93,7 +85,7 @@ func (c *deleteCmd) Run(p pterm.TextPrinter, ac *accounts.Client, oc *organizati
 	for _, r := range rs {
 		if r.Name == c.Name {
 			if id != nil && !c.Force {
-				return errors.Errorf(errMultipleRobotFmt, c.Name, upCtx.Account)
+				return errors.Errorf(errMultipleRobotFmt, c.Name, upCtx.Account.Name)
 			}
 			// Pin range variable so that we can take address.
 			r := r
@@ -102,12 +94,12 @@ func (c *deleteCmd) Run(p pterm.TextPrinter, ac *accounts.Client, oc *organizati
 	}
 
 	if id == nil {
-		return errors.Errorf(errFindRobotFmt, c.Name, upCtx.Account)
+		return errors.Errorf(errFindRobotFmt, c.Name, upCtx.Account.Name)
 	}
 
 	if err := rc.Delete(context.Background(), *id); err != nil {
 		return err
 	}
-	p.Printfln("%s/%s deleted", upCtx.Account, c.Name)
+	p.Printfln("%s/%s deleted", upCtx.Account.Name, c.Name)
 	return nil
 }

@@ -25,9 +25,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/pterm/pterm"
 
-	"github.com/upbound/up-sdk-go/service/accounts"
 	"github.com/upbound/up-sdk-go/service/organizations"
-	"github.com/upbound/up-sdk-go/service/robots"
 	"github.com/upbound/up-sdk-go/service/tokens"
 
 	"github.com/upbound/up/internal/upbound"
@@ -42,20 +40,13 @@ type createCmd struct {
 }
 
 // Run executes the create command.
-func (c *createCmd) Run(p pterm.TextPrinter, ac *accounts.Client, oc *organizations.Client, rc *robots.Client, tc *tokens.Client, upCtx *upbound.Context) error { //nolint:gocyclo
-	a, err := ac.Get(context.Background(), upCtx.Account)
-	if err != nil {
-		return err
-	}
-	if a.Account.Type != accounts.AccountOrganization {
-		return errors.New(errUserAccount)
-	}
-	rs, err := oc.ListRobots(context.Background(), a.Organization.ID)
+func (c *createCmd) Run(p pterm.TextPrinter, oc *organizations.Client, tc *tokens.Client, upCtx *upbound.Context) error { //nolint:gocyclo
+	rs, err := oc.ListRobots(context.Background(), upCtx.Account.ID)
 	if err != nil {
 		return err
 	}
 	if len(rs) == 0 {
-		return errors.Errorf(errFindRobotFmt, c.RobotName, upCtx.Account)
+		return errors.Errorf(errFindRobotFmt, c.RobotName, upCtx.Account.Name)
 	}
 	// TODO(hasheddan): because this API does not guarantee name uniqueness, we
 	// must guarantee that exactly one robot exists in the specified account
@@ -66,14 +57,14 @@ func (c *createCmd) Run(p pterm.TextPrinter, ac *accounts.Client, oc *organizati
 	for _, r := range rs {
 		if r.Name == c.RobotName {
 			if found {
-				return errors.Errorf(errMultipleRobotFmt, c.RobotName, upCtx.Account)
+				return errors.Errorf(errMultipleRobotFmt, c.RobotName, upCtx.Account.Name)
 			}
 			id = r.ID
 			found = true
 		}
 	}
 	if !found {
-		return errors.Errorf(errFindRobotFmt, c.RobotName, upCtx.Account)
+		return errors.Errorf(errFindRobotFmt, c.RobotName, upCtx.Account.Name)
 	}
 	res, err := tc.Create(context.Background(), &tokens.TokenCreateParameters{
 		Attributes: tokens.TokenAttributes{
@@ -91,7 +82,7 @@ func (c *createCmd) Run(p pterm.TextPrinter, ac *accounts.Client, oc *organizati
 	if err != nil {
 		return err
 	}
-	p.Printfln("%s/%s/%s created", upCtx.Account, c.RobotName, c.TokenName)
+	p.Printfln("%s/%s/%s created", upCtx.Account.Name, c.RobotName, c.TokenName)
 	if c.Output == "" {
 		p.Printfln("Refusing to emit sensitive output. Please specify output location.")
 		return nil

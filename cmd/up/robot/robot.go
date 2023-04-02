@@ -18,6 +18,7 @@ import (
 	"context"
 
 	"github.com/alecthomas/kong"
+	"github.com/crossplane/crossplane-runtime/pkg/errors"
 	"github.com/posener/complete"
 
 	"github.com/upbound/up-sdk-go/service/accounts"
@@ -29,7 +30,7 @@ import (
 )
 
 const (
-	errUserAccount = "robots are not currently supported for user accounts"
+	errUserAccountFmt = "%s is a user account but robot operations are supported only for organization accounts. use the --account flag to specify an organization account."
 )
 
 // AfterApply constructs and binds a robots client to any subcommands
@@ -38,6 +39,10 @@ func (c *Cmd) AfterApply(kongCtx *kong.Context) error {
 	upCtx, err := upbound.NewFromFlags(c.Flags)
 	if err != nil {
 		return err
+	}
+	// There is no way for users to own any control planes.
+	if upCtx.Account.Type == accounts.AccountUser {
+		return errors.Errorf(errUserAccountFmt, upCtx.Account.Name)
 	}
 	cfg, err := upCtx.BuildSDKConfig()
 	if err != nil {
@@ -71,7 +76,7 @@ func PredictRobots() complete.Predictor {
 			return nil
 		}
 
-		account, err := ac.Get(context.Background(), upCtx.Account)
+		account, err := ac.Get(context.Background(), upCtx.Account.Name)
 		if err != nil {
 			return nil
 		}

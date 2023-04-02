@@ -23,12 +23,9 @@ import (
 	"github.com/google/uuid"
 	"github.com/pterm/pterm"
 
-	"github.com/upbound/up-sdk-go/service/accounts"
 	"github.com/upbound/up-sdk-go/service/common"
 	"github.com/upbound/up-sdk-go/service/organizations"
 	"github.com/upbound/up-sdk-go/service/robots"
-	"github.com/upbound/up-sdk-go/service/tokens"
-
 	"github.com/upbound/up/internal/upbound"
 	"github.com/upbound/up/internal/upterm"
 )
@@ -46,20 +43,13 @@ type getCmd struct {
 }
 
 // Run executes the get robot token command.
-func (c *getCmd) Run(printer upterm.ObjectPrinter, ac *accounts.Client, oc *organizations.Client, rc *robots.Client, tc *tokens.Client, upCtx *upbound.Context) error { //nolint:gocyclo
-	a, err := ac.Get(context.Background(), upCtx.Account)
-	if err != nil {
-		return err
-	}
-	if a.Account.Type != accounts.AccountOrganization {
-		return errors.New(errUserAccount)
-	}
-	rs, err := oc.ListRobots(context.Background(), a.Organization.ID)
+func (c *getCmd) Run(printer upterm.ObjectPrinter, oc *organizations.Client, rc *robots.Client, upCtx *upbound.Context) error { //nolint:gocyclo
+	rs, err := oc.ListRobots(context.Background(), upCtx.Account.ID)
 	if err != nil {
 		return err
 	}
 	if len(rs) == 0 {
-		return errors.Errorf(errFindRobotFmt, c.RobotName, upCtx.Account)
+		return errors.Errorf(errFindRobotFmt, c.RobotName, upCtx.Account.Name)
 	}
 
 	// We pick the first robot account with this name, though there
@@ -75,7 +65,7 @@ func (c *getCmd) Run(printer upterm.ObjectPrinter, ac *accounts.Client, oc *orga
 		}
 	}
 	if rid == nil {
-		return errors.Errorf(errFindRobotFmt, c.RobotName, upCtx.Account)
+		return errors.Errorf(errFindRobotFmt, c.RobotName, upCtx.Account.Name)
 	}
 
 	ts, err := rc.ListTokens(context.Background(), *rid)
@@ -83,7 +73,7 @@ func (c *getCmd) Run(printer upterm.ObjectPrinter, ac *accounts.Client, oc *orga
 		return err
 	}
 	if len(ts.DataSet) == 0 {
-		return errors.Errorf(errFindTokenFmt, c.TokenName, c.RobotName, upCtx.Account)
+		return errors.Errorf(errFindTokenFmt, c.TokenName, c.RobotName, upCtx.Account.Name)
 	}
 
 	// We pick the first token with this name, though there may be more
@@ -99,7 +89,7 @@ func (c *getCmd) Run(printer upterm.ObjectPrinter, ac *accounts.Client, oc *orga
 		}
 	}
 	if theToken == nil {
-		return errors.Errorf(errFindTokenFmt, c.TokenName, c.RobotName, upCtx.Account)
+		return errors.Errorf(errFindTokenFmt, c.TokenName, c.RobotName, upCtx.Account.Name)
 	}
 	return printer.Print(*theToken, fieldNames, extractFields)
 }

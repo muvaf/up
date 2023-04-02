@@ -18,7 +18,6 @@ import (
 	"context"
 	"strconv"
 
-	"github.com/crossplane/crossplane-runtime/pkg/errors"
 	"github.com/pterm/pterm"
 
 	"github.com/upbound/up-sdk-go/service/accounts"
@@ -38,13 +37,6 @@ type createCmd struct {
 
 // Run executes the create command.
 func (c *createCmd) Run(p pterm.TextPrinter, ac *accounts.Client, rc *robots.Client, upCtx *upbound.Context) error {
-	a, err := ac.Get(context.Background(), upCtx.Account)
-	if err != nil {
-		return err
-	}
-	if a.Account.Type != accounts.AccountOrganization {
-		return errors.New(errUserAccount)
-	}
 	if _, err := rc.Create(context.Background(), &robots.RobotCreateParameters{
 		Attributes: robots.RobotAttributes{
 			Name:        c.Name,
@@ -54,13 +46,13 @@ func (c *createCmd) Run(p pterm.TextPrinter, ac *accounts.Client, rc *robots.Cli
 			Owner: robots.RobotOwner{
 				Data: robots.RobotOwnerData{
 					Type: robots.RobotOwnerOrganization,
-					ID:   strconv.FormatUint(uint64(a.Organization.ID), 10),
+					ID:   strconv.FormatUint(uint64(upCtx.Account.ID), 10),
 				},
 			},
 		},
 	}); err != nil {
 		return err
 	}
-	p.Printfln("%s/%s created", upCtx.Account, c.Name)
+	p.Printfln("%s/%s created", upCtx.Account.Name, c.Name)
 	return nil
 }

@@ -19,7 +19,6 @@ import (
 	"time"
 
 	"github.com/alecthomas/kong"
-	"github.com/crossplane/crossplane-runtime/pkg/errors"
 	"github.com/pterm/pterm"
 	"k8s.io/apimachinery/pkg/util/duration"
 
@@ -43,19 +42,12 @@ type listCmd struct{}
 
 // Run executes the list robots command.
 func (c *listCmd) Run(printer upterm.ObjectPrinter, p pterm.TextPrinter, ac *accounts.Client, oc *organizations.Client, upCtx *upbound.Context) error {
-	a, err := ac.Get(context.Background(), upCtx.Account)
-	if err != nil {
-		return err
-	}
-	if a.Account.Type != accounts.AccountOrganization {
-		return errors.New(errUserAccount)
-	}
-	rs, err := oc.ListRobots(context.Background(), a.Organization.ID)
+	rs, err := oc.ListRobots(context.Background(), upCtx.Account.ID)
 	if err != nil {
 		return err
 	}
 	if len(rs) == 0 {
-		p.Printfln("No robots found in %s", upCtx.Account)
+		p.Printfln("No robots found in %s", upCtx.Account.Name)
 		return nil
 	}
 	return printer.Print(rs, fieldNames, extractFields)

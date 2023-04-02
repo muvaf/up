@@ -25,7 +25,6 @@ import (
 	"github.com/pterm/pterm"
 	"k8s.io/apimachinery/pkg/util/duration"
 
-	"github.com/upbound/up-sdk-go/service/accounts"
 	"github.com/upbound/up-sdk-go/service/common"
 	"github.com/upbound/up-sdk-go/service/organizations"
 	"github.com/upbound/up-sdk-go/service/robots"
@@ -48,20 +47,13 @@ type listCmd struct {
 }
 
 // Run executes the list robot tokens command.
-func (c *listCmd) Run(printer upterm.ObjectPrinter, p pterm.TextPrinter, ac *accounts.Client, oc *organizations.Client, rc *robots.Client, upCtx *upbound.Context) error { //nolint:gocyclo
-	a, err := ac.Get(context.Background(), upCtx.Account)
-	if err != nil {
-		return err
-	}
-	if a.Account.Type != accounts.AccountOrganization {
-		return errors.New(errUserAccount)
-	}
-	rs, err := oc.ListRobots(context.Background(), a.Organization.ID)
+func (c *listCmd) Run(printer upterm.ObjectPrinter, p pterm.TextPrinter, oc *organizations.Client, rc *robots.Client, upCtx *upbound.Context) error { //nolint:gocyclo
+	rs, err := oc.ListRobots(context.Background(), upCtx.Account.ID)
 	if err != nil {
 		return err
 	}
 	if len(rs) == 0 {
-		return errors.Errorf(errFindRobotFmt, c.RobotName, upCtx.Account)
+		return errors.Errorf(errFindRobotFmt, c.RobotName, upCtx.Account.Name)
 	}
 	// TODO(hasheddan): because this API does not guarantee name uniqueness, we
 	// must guarantee that exactly one robot exists in the specified account
@@ -71,7 +63,7 @@ func (c *listCmd) Run(printer upterm.ObjectPrinter, p pterm.TextPrinter, ac *acc
 	for _, r := range rs {
 		if r.Name == c.RobotName {
 			if rid != nil {
-				return errors.Errorf(errMultipleRobotFmt, c.RobotName, upCtx.Account)
+				return errors.Errorf(errMultipleRobotFmt, c.RobotName, upCtx.Account.Name)
 			}
 			// Pin range variable so that we can take address.
 			r := r
@@ -79,7 +71,7 @@ func (c *listCmd) Run(printer upterm.ObjectPrinter, p pterm.TextPrinter, ac *acc
 		}
 	}
 	if rid == nil {
-		return errors.Errorf(errFindRobotFmt, c.RobotName, upCtx.Account)
+		return errors.Errorf(errFindRobotFmt, c.RobotName, upCtx.Account.Name)
 	}
 
 	ts, err := rc.ListTokens(context.Background(), *rid)
@@ -87,7 +79,7 @@ func (c *listCmd) Run(printer upterm.ObjectPrinter, p pterm.TextPrinter, ac *acc
 		return err
 	}
 	if len(ts.DataSet) == 0 {
-		p.Printfln("No tokens found for robot %s in %s", c.RobotName, upCtx.Account)
+		p.Printfln("No tokens found for robot %s in %s", c.RobotName, upCtx.Account.Name)
 		return nil
 	}
 	return printer.Print(ts.DataSet, fieldNames, extractFields)
